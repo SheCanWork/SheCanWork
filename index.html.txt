@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>她工作 · 女性就业互助平台</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; }
+        body { background: #fdf6f4; padding: 16px; padding-bottom: 100px; }
+
+        /* 顶部防骗提示 */
+        .safety-bar { background: #fff3e0; border-left: 4px solid #ff9800; padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; font-size: 13px; color: #b26a00; line-height: 1.6; }
+        .safety-bar strong { color: #e65100; }
+
+        /* 头部 */
+        .app-header { background: linear-gradient(135deg, #f8c8c8, #e8a0a0); color: white; padding: 24px 20px; border-radius: 20px; margin-bottom: 20px; text-align: center; }
+        .app-header h1 { font-size: 26px; font-weight: 500; letter-spacing: 3px; }
+        .app-header p { font-size: 13px; opacity: 0.9; margin-top: 8px; }
+
+        /* 年龄筛选标签 */
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 16px; overflow-x: auto; padding-bottom: 4px; }
+        .filter-tag { flex-shrink: 0; padding: 8px 16px; border-radius: 20px; background: white; color: #8a6a5a; font-size: 13px; border: 1px solid #f0e0d8; cursor: pointer; }
+        .filter-tag.active { background: #e8a0a0; color: white; border-color: #e8a0a0; }
+
+        /* 信息卡片 */
+        .card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 12px; box-shadow: 0 2px 10px rgba(200,150,150,0.08); }
+        .card .type-badge { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 10px; margin-bottom: 8px; }
+        .type-badge.hiring { background: #e8f5e9; color: #2e7d32; }
+        .type-badge.seeking { background: #e3f2fd; color: #1565c0; }
+        .card h3 { color: #333; font-size: 17px; margin-bottom: 8px; }
+        .card .meta { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+        .card .tag { background: #fdf0ec; color: #a07060; font-size: 12px; padding: 4px 12px; border-radius: 12px; }
+        .card .contact { color: #d48080; font-weight: 600; font-size: 15px; }
+        .card .time { color: #ccc; font-size: 12px; margin-top: 8px; display: block; }
+
+        /* 空状态 */
+        .empty { text-align: center; color: #c0a8a0; padding: 60px 20px; font-size: 15px; }
+
+        /* 发布按钮 */
+        .fab { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #e8a0a0, #d48080); color: white; border: none; padding: 16px 44px; border-radius: 40px; font-size: 17px; box-shadow: 0 6px 20px rgba(212,128,128,0.35); cursor: pointer; }
+
+        /* 弹窗 */
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.35); align-items: center; justify-content: center; z-index: 100; }
+        .modal.show { display: flex; }
+        .modal-box { background: white; width: 90%; max-width: 400px; border-radius: 24px; padding: 24px; }
+        .modal-box h3 { color: #333; margin-bottom: 16px; font-size: 18px; }
+        .modal-box input, .modal-box select, .modal-box textarea { width: 100%; padding: 14px; margin: 6px 0; border: 1px solid #f0e0d8; border-radius: 12px; font-size: 15px; background: #fdfaf9; }
+        .modal-box textarea { resize: none; height: 70px; }
+        .modal-box .btn-submit { background: linear-gradient(135deg, #e8a0a0, #d48080); color: white; border: none; padding: 15px; width: 100%; border-radius: 12px; font-size: 16px; margin-top: 14px; cursor: pointer; }
+        .modal-box .btn-close { background: #f5f0eb; color: #888; border: none; padding: 12px; width: 100%; border-radius: 12px; margin-top: 8px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <!-- 防骗提示 -->
+    <div class="safety-bar">
+        <strong>⚠️ 防骗提醒：</strong>绝不交押金 · 绝不押身份证 · 见面选公共场所
+    </div>
+
+    <!-- 头部 -->
+    <div class="app-header">
+        <h1>👩‍💼 她工作</h1>
+        <p>仅限女性 · 灵活就业 · 互相帮助</p>
+    </div>
+
+    <!-- 年龄筛选 -->
+    <div class="filter-bar">
+        <div class="filter-tag active" data-age="all">全部</div>
+        <div class="filter-tag" data-age="18-24">18-24岁</div>
+        <div class="filter-tag" data-age="25-40">25-40岁</div>
+        <div class="filter-tag" data-age="40+">40岁以上</div>
+    </div>
+
+    <!-- 信息列表 -->
+    <div id="jobList"></div>
+
+    <!-- 发布按钮 -->
+    <button class="fab" id="showModalBtn">+ 发布信息</button>
+
+    <!-- 发布弹窗 -->
+    <div class="modal" id="myModal">
+        <div class="modal-box">
+            <h3>发布招工 / 求职</h3>
+            <select id="inputType">
+                <option value="招工">🔨 我要招人</option>
+                <option value="求职">🙋 我要找工作</option>
+            </select>
+            <input id="inputTitle" placeholder="标题（如：招保洁阿姨 / 找手工活）">
+            <input id="inputAge" placeholder="年龄要求（如：35-50岁）">
+            <input id="inputContact" placeholder="联系方式（手机 / 微信）">
+            <textarea id="inputNote" placeholder="补充说明（选填，如：工作地点、时间）"></textarea>
+            <button class="btn-submit" id="saveBtn">✓ 发布</button>
+            <button class="btn-close" id="closeModalBtn">取消</button>
+        </div>
+    </div>
+
+    <script>
+        // 读取本地存储的数据
+        let jobs = JSON.parse(localStorage.getItem('sheJobs')) || [];
+        let currentFilter = 'all';
+
+        // 渲染列表
+        function render() {
+            const list = document.getElementById('jobList');
+            let filtered = jobs;
+            if (currentFilter !== 'all') {
+                filtered = jobs.filter(j => j.age && j.age.includes(currentFilter.replace('+', '')));
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = '<div class="empty">暂无信息<br>点击下方按钮发布第一条</div>';
+                return;
+            }
+
+            list.innerHTML = filtered.map(job => `
+                <div class="card">
+                    <span class="type-badge ${job.type === '招工' ? 'hiring' : 'seeking'}">${job.type === '招工' ? '🔨 招人' : '🙋 求职'}</span>
+                    <h3>${job.title}</h3>
+                    <div class="meta">
+                        ${job.age ? `<span class="tag">👤 ${job.age}</span>` : ''}
+                    </div>
+                    ${job.note ? `<p style="color:#999;font-size:13px;margin-bottom:8px;">${job.note}</p>` : ''}
+                    <span class="contact">📞 ${job.contact}</span>
+                    <span class="time">${job.time}</span>
+                </div>
+            `).join('');
+        }
+
+        // 打开弹窗
+        document.getElementById('showModalBtn').onclick = () => document.getElementById('myModal').classList.add('show');
+        document.getElementById('closeModalBtn').onclick = () => document.getElementById('myModal').classList.remove('show');
+
+        // 发布信息
+        document.getElementById('saveBtn').onclick = () => {
+            const type = document.getElementById('inputType').value;
+            const title = document.getElementById('inputTitle').value.trim();
+            const age = document.getElementById('inputAge').value.trim();
+            const contact = document.getElementById('inputContact').value.trim();
+            const note = document.getElementById('inputNote').value.trim();
+
+            if (!title || !contact) {
+                alert('请至少填写标题和联系方式');
+                return;
+            }
+
+            jobs.unshift({
+                type, title, age, contact, note,
+                time: new Date().toLocaleString('zh-CN')
+            });
+
+            localStorage.setItem('sheJobs', JSON.stringify(jobs));
+            render();
+            document.getElementById('myModal').classList.remove('show');
+
+            // 清空输入
+            document.getElementById('inputTitle').value = '';
+            document.getElementById('inputAge').value = '';
+            document.getElementById('inputContact').value = '';
+            document.getElementById('inputNote').value = '';
+        };
+
+        // 年龄筛选
+        document.querySelectorAll('.filter-tag').forEach(tag => {
+            tag.onclick = () => {
+                document.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                currentFilter = tag.dataset.age;
+                render();
+            };
+        });
+
+        render();
+    </script>
+</body>
+</html>
